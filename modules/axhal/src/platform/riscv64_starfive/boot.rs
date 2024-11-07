@@ -58,7 +58,7 @@ unsafe extern "C" fn _start() -> ! {
     )
 }
 
-/// The earliest entry point for secondary CPUs.
+// The earliest entry point for secondary CPUs.
 #[cfg(feature = "smp")]
 #[naked]
 #[no_mangle]
