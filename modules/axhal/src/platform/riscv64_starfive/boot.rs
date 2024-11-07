@@ -21,10 +21,10 @@ unsafe fn init_mmu() {
     riscv::asm::sfence_vma_all();
 }
 
-/// The earliest entry point for the primary CPU.
 #[naked]
 #[no_mangle]
 #[link_section = ".text.boot"]
+// The earliest entry point for the primary CPU.
 unsafe extern "C" fn _start() -> ! {
     // PC = 0x8020_0000
     // a0 = hartid
