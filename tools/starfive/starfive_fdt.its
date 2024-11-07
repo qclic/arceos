@@ -11,7 +11,7 @@
     images {
         kernel {
             description = "Linux kernel for zCore-visionfive";
-            data = /incbin/("../../arceos-starfive.bin.gz");
+            data = /incbin/("../../target/arceos-starfive.bin.gz");
             type = "kernel";
             arch = "riscv";
             os = "linux";
