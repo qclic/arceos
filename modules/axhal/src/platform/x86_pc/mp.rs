@@ -43,3 +43,8 @@ pub fn start_secondary_cpu(apic_id: usize, stack_top: PhysAddr) {
     busy_wait(Duration::from_micros(200)); // 200us
     unsafe { lapic.send_sipi(START_PAGE_IDX, apic_id) };
 }
+
+/// Converts the given CPU hardware ID to its logical ID.
+pub fn cpu_hard_id_to_logic_id(hard_id: usize) -> usize {
+    hard_id
+}
