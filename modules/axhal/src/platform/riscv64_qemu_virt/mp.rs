@@ -12,3 +12,8 @@ pub fn start_secondary_cpu(hartid: usize, stack_top: PhysAddr) {
     let entry = virt_to_phys(va!(_start_secondary as usize));
     sbi_rt::hart_start(hartid, entry.as_usize(), stack_top.as_usize());
 }
+
+/// Converts the given CPU hardware ID to its logical ID.
+pub fn cpu_hard_id_to_logic_id(hard_id: usize) -> usize {
+    hard_id
+}

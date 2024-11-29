@@ -1,27 +1,27 @@
+use axconfig::CPU_ID_LIST;
+
 use crate::mem::{virt_to_phys, PhysAddr};
 
-/// Hart number of bsta1000b board
-pub const MAX_HARTS: usize = 8;
-/// CPU HWID from cpu device tree nodes with "reg" property
-pub const CPU_HWID: [usize; MAX_HARTS] = [0x00, 0x100, 0x200, 0x300, 0x400, 0x500, 0x600, 0x700];
+extern "C" {
+    fn _start_secondary();
+}
 
-/// Converts the given CPU hardware ID to its logical ID.
 pub fn cpu_hard_id_to_logic_id(hard_id: usize) -> usize {
-    hard_id
+    if CPU_ID_LIST.is_empty() {
+        hard_id
+    } else {
+        CPU_ID_LIST.iter().position(|&x| x == hard_id).unwrap()
+    }
 }
 
 /// Starts the given secondary CPU with its boot stack.
 pub fn start_secondary_cpu(cpu_id: usize, stack_top: PhysAddr) {
-    if cpu_id >= MAX_HARTS {
-        error!("No support for bsta1000b core {}", cpu_id);
-        return;
-    }
     extern "C" {
         fn _start_secondary();
     }
     let entry = virt_to_phys(va!(_start_secondary as usize));
     crate::platform::aarch64_common::psci::cpu_on(
-        CPU_HWID[cpu_id],
+        CPU_ID_LIST[cpu_id],
         entry.as_usize(),
         stack_top.as_usize(),
     );

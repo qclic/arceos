@@ -40,3 +40,8 @@ pub fn start_secondary_cpu(cpu_id: usize, stack_top: PhysAddr) {
     }
     aarch64_cpu::asm::sev();
 }
+
+/// Converts the given CPU hardware ID to its logical ID.
+pub fn cpu_hard_id_to_logic_id(hard_id: usize) -> usize {
+    hard_id
+}

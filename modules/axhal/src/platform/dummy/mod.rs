@@ -23,6 +23,9 @@ pub mod misc {
 
 #[cfg(feature = "smp")]
 pub mod mp {
+    pub fn cpu_hard_id_to_logic_id(hard_id: usize) -> usize {
+        0
+    }
     /// Starts the given secondary CPU with its boot stack.
     pub fn start_secondary_cpu(cpu_id: usize, stack_top: crate::mem::PhysAddr) {}
 }
