@@ -5,7 +5,7 @@ mod idt;
 #[cfg(target_os = "none")]
 mod trap;
 
-use core::arch::asm;
+use core::{arch::asm, ptr::NonNull};
 
 use memory_addr::{MemoryAddr, PhysAddr, VirtAddr};
 use x86::{controlregs, msr, tlb};

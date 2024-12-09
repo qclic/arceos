@@ -4,6 +4,8 @@ mod macros;
 mod context;
 mod trap;
 
+use core::{arch::asm, ptr::NonNull};
+
 use memory_addr::{PhysAddr, VirtAddr};
 use riscv::asm;
 use riscv::register::{satp, sstatus, stvec};
