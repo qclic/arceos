@@ -107,3 +107,15 @@ pub fn read_thread_pointer() -> usize {
 pub unsafe fn write_thread_pointer(tp: usize) {
     core::arch::asm!("mv tp, {}", in(reg) tp)
 }
+
+/// Invalidate data cache
+#[inline]
+pub fn dcache_invalidate_range(addr: NonNull<u8>, size: usize) {
+    unimplemented!()
+}
+
+/// Flush data cache
+#[inline]
+pub fn dcache_flush_range(addr: NonNull<u8>, size: usize) {
+    unimplemented!()
+}
