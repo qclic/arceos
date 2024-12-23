@@ -2,13 +2,11 @@ use core::time::Duration;
 
 use alloc::{boxed::Box, string::String, vec::Vec};
 
-use super::{header::{ControlPakcetType, FixHeader}, ToBytes};
-
-pub struct Property {
-    struct_id: [u8; 4],
-    struct_version: isize,
-    mqtt_version: u8,
-}
+use super::{
+    header::{ControlPakcetType, FixHeader},
+    property::Property,
+    ToBytes,
+};
 
 pub struct Connect {
     pub protocol_level: u8,
@@ -16,10 +14,25 @@ pub struct Connect {
     pub user_name: Option<String>,
     pub password: Option<String>,
     pub keep_alive: Duration,
+    pub session_expiry_interval_sec: u32,
+}
+impl Default for Connect {
+    fn default() -> Self {
+        Self {
+            protocol_level: 5,
+            clean_start: Default::default(),
+            user_name: Default::default(),
+            password: Default::default(),
+            keep_alive: Default::default(),
+            session_expiry_interval_sec: Default::default(),
+        }
+    }
 }
 
-impl Connect {
-    pub fn to_bytes(&self) -> Vec<u8> {
+impl Connect {}
+
+impl ToBytes for Connect {
+    fn to_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::new();
         buf.extend(ProtocolName::to_bytes());
         buf.push(self.protocol_level);
@@ -41,19 +54,20 @@ impl Connect {
         let keep_alive = self.keep_alive.as_secs() as u16;
         buf.extend(keep_alive.to_be_bytes());
 
-        buf
+        let properties = alloc::vec![Property::SessionExpiryInterval(
+            self.session_expiry_interval_sec
+        ),];
+
+        buf.extend((&properties[..]).to_bytes());
+
+        let len = buf.len();
+        let header = FixHeader::new(ControlPakcetType::Connect, len);
+
+        let mut all = header.to_bytes();
+        all.append(&mut buf);
+        all
     }
 }
-
-// impl ToBytes for Connect {
-//     fn to_bytes(&self) -> Vec<u8> {
-
-
-
-
-//         // let Header = FixHeader::new(ControlPakcetType::Connect, );
-//     }
-// }
 
 struct ProtocolName {}
 
@@ -72,5 +86,20 @@ bitflags::bitflags! {
         const WILL_FLAG = 1 << 2;
         const CLEAN_START = 1 << 1;
         const RESERVED = 1;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_connect() {
+        let mut connect = Connect::default();
+        connect.clean_start = true;
+        connect.keep_alive = Duration::from_secs(10);
+        connect.session_expiry_interval_sec = 10;
+        let bytes = connect.to_bytes();
+        println!("{:?}", bytes);
     }
 }

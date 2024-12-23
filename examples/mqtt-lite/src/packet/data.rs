@@ -57,7 +57,10 @@ impl ReadBuf for TwoByteInt {
 
 #[derive(Default)]
 #[repr(transparent)]
-pub struct FourByteInt(u32);
+pub struct FourByteInt(pub u32);
+
+
+
 
 impl FourByteInt {
     pub fn to_usize(&self) -> usize {
