@@ -1,0 +1,15 @@
+[package]
+name = "mqtt-lite"
+edition = "2021"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+bitflags = "2.6"
+bytes = { version = "1.9", default-features = false }

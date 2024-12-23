@@ -1,0 +1,22 @@
+[package]
+name = "mqttclient"
+edition = "2021"
+version.workspace = true
+
+authors = [
+    "周睿 <zrufo747@outlook.com>",
+]
+
+license.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+axstd = { workspace = true, features = ["net"], optional = true }
+
+[features]
+default = []
+dns = ["axstd?/dns"]
