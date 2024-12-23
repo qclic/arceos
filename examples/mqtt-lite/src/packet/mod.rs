@@ -1,61 +1,27 @@
-pub mod connect;
-pub mod header;
+use alloc::vec::Vec;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum MsgTypes {
-    Connect = 1,
-    Connack,
-    Publish,
-    Puback,
-    Pubrec,
-    Pubrel,
-    Pubcomp,
-    Subscribe,
-    Suback,
-    Unsubscribe,
-    Unsuback,
-    Pingreq,
-    Pingresp,
-    Disconnect,
-}
+pub mod connect;
+mod data;
+pub mod header;
+pub mod property;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PacketError {
     BufferTooShort,
     Read,
     InvaildControlType(u8),
+    InvalidUtf8,
 }
 
-#[repr(C)]
-pub struct MQTTLenString {
-    pub len: usize,
-    pub data: *const char,
+pub enum Packet {
+    Connect(connect::Property),
 }
 
-#[repr(C)]
-pub struct MQTTString {
-    pub cstring: *const char,
-    pub lenstring: MQTTLenString,
+pub trait ToBytes {
+    fn to_bytes(&self) -> Vec<u8>;
 }
 
-impl MQTTString {
-    pub fn new() -> Self {
-        MQTTString {
-            cstring: core::ptr::null(),
-            lenstring: MQTTLenString {
-                len: 0,
-                data: core::ptr::null(),
-            },
-        }
-    }
-
-    pub fn len(&self) -> usize {
-        self.lenstring.len
-    }
+pub trait ReadBuf {
+    fn read(&mut self, buff: &mut impl Iterator<Item = u8>)->Result<(), PacketError>;
 }
 
-impl Default for MQTTString {
-    fn default() -> Self {
-        Self::new()
-    }
-}
