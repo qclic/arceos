@@ -1,12 +1,23 @@
-use super::{property::Property, PacketError, ReadBuf, ToBytes};
+use alloc::vec::Vec;
 
-pub struct Header {
+use super::{data::VariableByteInt, PacketError, ReadBuf, ToBytes};
+
+pub struct FixHeader {
     pub control_type: ControlPakcetType,
-    pub remaining_len: u8,
+    pub remaining_len: usize,
 }
 
-impl Header {
-    pub fn new() -> Self {
+impl FixHeader {
+    pub fn new(ty: ControlPakcetType, remaining_len: usize) -> Self {
+        Self {
+            control_type: ty,
+            remaining_len: remaining_len as _,
+        }
+    }
+}
+
+impl Default for FixHeader {
+    fn default() -> Self {
         Self {
             control_type: ControlPakcetType::Connect,
             remaining_len: 0,
@@ -21,7 +32,7 @@ pub enum ControlPakcetType {
 }
 
 impl ControlPakcetType {
-    fn to_byte(&self) -> u8 {
+    fn to_byte(self) -> u8 {
         let mut byte = 0;
 
         let mut ty = 0;
@@ -50,44 +61,26 @@ impl ControlPakcetType {
     }
 }
 
-impl ReadBuf for ControlPakcetType {
-    fn read(&mut self, buff: &mut impl Iterator<Item = u8>) -> Result<(), PacketError> {
-        Ok(())
-    }
-}
-
-impl Header {
-    pub fn parse(buff: &[u8]) -> Result<Header, PacketError> {
-        if buff.len() < 2 {
-            return Err(PacketError::BufferTooShort);
-        }
-
-        let control_type = ControlPakcetType::parse(buff[0])?;
-
-        let remaining_len = buff[1];
-
-        Ok(Self {
-            control_type,
-            remaining_len,
-        })
-    }
-}
-
-impl ToBytes for Header {
+impl ToBytes for FixHeader {
     fn to_bytes(&self) -> alloc::vec::Vec<u8> {
-        let mut bytes = [0; 2];
-
-        bytes[0] = self.control_type.to_byte();
-        bytes[1] = self.remaining_len;
-        bytes.to_vec()
+        let t = self.control_type.to_byte();
+        let mut len = VariableByteInt::from(self.remaining_len).to_bytes();
+        let mut bytes = Vec::with_capacity(len.len() + 1);
+        bytes.push(t);
+        bytes.append(&mut len);
+        bytes
     }
 }
 
-impl ReadBuf for Header {
+impl ReadBuf for FixHeader {
     fn read(&mut self, buff: &mut impl Iterator<Item = u8>) -> Result<(), PacketError> {
         let byte = buff.next().ok_or(PacketError::BufferTooShort)?;
         self.control_type = ControlPakcetType::parse(byte)?;
-        self.remaining_len = buff.next().ok_or(PacketError::BufferTooShort)?;
+
+        let mut len = VariableByteInt::default();
+        len.read(buff)?;
+
+        self.remaining_len = len.to_usize();
         Ok(())
     }
 }

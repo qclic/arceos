@@ -11,17 +11,27 @@ pub enum PacketError {
     Read,
     InvaildControlType(u8),
     InvalidUtf8,
+    MalformedVariableByteInteger
 }
 
 pub enum Packet {
-    Connect(connect::Property),
+    Connect(connect::Connect),
 }
+
+// impl ToBytes for Packet {
+//     fn to_bytes(&self) -> Vec<u8> {
+//         match self {
+//             Packet::Connect(connect) => connect.to_bytes(),
+//         }
+//     }
+// }
+
+
 
 pub trait ToBytes {
     fn to_bytes(&self) -> Vec<u8>;
 }
 
 pub trait ReadBuf {
-    fn read(&mut self, buff: &mut impl Iterator<Item = u8>)->Result<(), PacketError>;
+    fn read(&mut self, buff: &mut impl Iterator<Item = u8>) -> Result<(), PacketError>;
 }
-

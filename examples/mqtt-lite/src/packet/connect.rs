@@ -1,6 +1,8 @@
 use core::time::Duration;
 
-use alloc::{string::String, vec::Vec};
+use alloc::{boxed::Box, string::String, vec::Vec};
+
+use super::{header::{ControlPakcetType, FixHeader}, ToBytes};
 
 pub struct Property {
     struct_id: [u8; 4],
@@ -39,12 +41,19 @@ impl Connect {
         let keep_alive = self.keep_alive.as_secs() as u16;
         buf.extend(keep_alive.to_be_bytes());
 
-        
-
-
         buf
     }
 }
+
+// impl ToBytes for Connect {
+//     fn to_bytes(&self) -> Vec<u8> {
+
+
+
+
+//         // let Header = FixHeader::new(ControlPakcetType::Connect, );
+//     }
+// }
 
 struct ProtocolName {}
 
