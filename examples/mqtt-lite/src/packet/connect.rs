@@ -1,15 +1,14 @@
 use core::time::Duration;
 
-use alloc::{boxed::Box, string::String, vec::Vec};
+use alloc::{string::String, vec::Vec};
 
 use super::{
-    header::{ControlPakcetType, FixHeader},
-    property::Property,
-    ToBytes,
+    header::{ControlPakcetType, FixHeader}, property::Property, Reader, ToBytes
 };
 
 pub struct Connect {
     pub protocol_level: u8,
+    pub client_id: String,
     pub clean_start: bool,
     pub user_name: Option<String>,
     pub password: Option<String>,
@@ -25,11 +24,20 @@ impl Default for Connect {
             password: Default::default(),
             keep_alive: Default::default(),
             session_expiry_interval_sec: Default::default(),
+            client_id: Default::default(),
         }
     }
 }
 
-impl Connect {}
+impl Connect {
+    pub fn new(id: impl Into<String>) -> Self {
+        Self {
+            client_id: id.into(),
+            protocol_level: 5,
+            ..Default::default()
+        }
+    }
+}
 
 impl ToBytes for Connect {
     fn to_bytes(&self) -> Vec<u8> {
@@ -60,12 +68,33 @@ impl ToBytes for Connect {
 
         buf.extend((&properties[..]).to_bytes());
 
-        let len = buf.len();
-        let header = FixHeader::new(ControlPakcetType::Connect, len);
+        // Payload
 
-        let mut all = header.to_bytes();
-        all.append(&mut buf);
-        all
+        let client_id = self.client_id.to_bytes();
+        buf.extend(client_id);
+
+        //TODO: will properties
+
+        //TODO: will topic
+
+        //TODO: will payload
+
+        if let Some(user_name) = self.user_name.as_ref() {
+            buf.extend(user_name.to_bytes());
+        }
+
+        if let Some(password) = self.password.as_ref() {
+            buf.extend(password.to_bytes());
+        }
+
+        buf
+    }
+}
+
+
+impl Reader for Connect {
+    fn read(&mut self, buff: &mut impl crate::BufRead) -> Result<(), crate::MqttError> {
+        todo!()
     }
 }
 

@@ -1,6 +1,8 @@
 use alloc::vec::Vec;
 
-use super::{data::VariableByteInt, PacketError, ReadBuf, ToBytes};
+use crate::{BufRead, MqttError};
+
+use super::{data::VariableByteInt, PacketError, Reader, ToBytes};
 
 pub struct FixHeader {
     pub control_type: ControlPakcetType,
@@ -52,11 +54,11 @@ impl ControlPakcetType {
         byte
     }
 
-    fn parse(byte: u8) -> Result<ControlPakcetType, PacketError> {
+    fn parse(byte: u8) -> Result<ControlPakcetType, MqttError> {
         Ok(match byte >> 4 {
             1 => ControlPakcetType::Connect,
             2 => ControlPakcetType::ConnAck,
-            _ => return Err(PacketError::InvaildControlType(byte)),
+            _ => return Err(MqttError::Packet(PacketError::InvaildControlType(byte))),
         })
     }
 }
@@ -72,9 +74,9 @@ impl ToBytes for FixHeader {
     }
 }
 
-impl ReadBuf for FixHeader {
-    fn read(&mut self, buff: &mut impl Iterator<Item = u8>) -> Result<(), PacketError> {
-        let byte = buff.next().ok_or(PacketError::BufferTooShort)?;
+impl Reader for FixHeader {
+    fn read(&mut self, buff: &mut impl crate::BufRead) -> Result<(), crate::MqttError> {
+        let byte = buff.next()?;
         self.control_type = ControlPakcetType::parse(byte)?;
 
         let mut len = VariableByteInt::default();

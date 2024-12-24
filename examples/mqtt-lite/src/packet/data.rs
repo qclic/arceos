@@ -1,6 +1,6 @@
 use alloc::{boxed::Box, string::String, vec::Vec};
 
-use super::{PacketError, ReadBuf, ToBytes};
+use super::{PacketError, Reader, ToBytes};
 
 #[derive(Default)]
 #[repr(transparent)]
@@ -18,9 +18,9 @@ impl ToBytes for Bits {
     }
 }
 
-impl ReadBuf for Bits {
-    fn read(&mut self, buff: &mut impl Iterator<Item = u8>) -> Result<(), PacketError> {
-        self.0 = buff.next().ok_or(PacketError::BufferTooShort)?;
+impl Reader for Bits {
+    fn read(&mut self, buff: &mut impl crate::BufRead) -> Result<(), crate::MqttError> {
+        self.0 = buff.next()?;
         Ok(())
     }
 }
@@ -44,12 +44,9 @@ impl ToBytes for TwoByteInt {
     }
 }
 
-impl ReadBuf for TwoByteInt {
-    fn read(&mut self, buff: &mut impl Iterator<Item = u8>) -> Result<(), PacketError> {
-        self.0 = u16::from_be_bytes([
-            buff.next().ok_or(PacketError::BufferTooShort)?,
-            buff.next().ok_or(PacketError::BufferTooShort)?,
-        ]);
+impl Reader for TwoByteInt {
+    fn read(&mut self, buff: &mut impl crate::BufRead) -> Result<(), crate::MqttError> {
+        self.0 = u16::from_be_bytes([buff.next()?, buff.next()?]);
 
         Ok(())
     }
@@ -58,9 +55,6 @@ impl ReadBuf for TwoByteInt {
 #[derive(Default)]
 #[repr(transparent)]
 pub struct FourByteInt(pub u32);
-
-
-
 
 impl FourByteInt {
     pub fn to_usize(&self) -> usize {
@@ -71,14 +65,9 @@ impl FourByteInt {
     }
 }
 
-impl ReadBuf for FourByteInt {
-    fn read(&mut self, buff: &mut impl Iterator<Item = u8>) -> Result<(), PacketError> {
-        self.0 = u32::from_be_bytes([
-            buff.next().ok_or(PacketError::BufferTooShort)?,
-            buff.next().ok_or(PacketError::BufferTooShort)?,
-            buff.next().ok_or(PacketError::BufferTooShort)?,
-            buff.next().ok_or(PacketError::BufferTooShort)?,
-        ]);
+impl Reader for FourByteInt {
+    fn read(&mut self, buff: &mut impl crate::BufRead) -> Result<(), crate::MqttError> {
+        self.0 = u32::from_be_bytes([buff.next()?, buff.next()?, buff.next()?, buff.next()?]);
 
         Ok(())
     }
@@ -106,18 +95,20 @@ impl From<usize> for VariableByteInt {
     }
 }
 
-impl ReadBuf for VariableByteInt {
-    fn read(&mut self, buff: &mut impl Iterator<Item = u8>) -> Result<(), PacketError> {
+impl Reader for VariableByteInt {
+    fn read(&mut self, buff: &mut impl crate::BufRead) -> Result<(), crate::MqttError> {
         let mut value = 0;
         let mut multiplier = 1;
 
         loop {
-            let encoded_byte = buff.next().ok_or(PacketError::BufferTooShort)?;
+            let encoded_byte = buff.next()?;
 
             value += (encoded_byte & 127) as u32 * multiplier;
 
             if multiplier > 128 * 128 * 128 {
-                return Err(PacketError::MalformedVariableByteInteger);
+                return Err(crate::MqttError::Packet(
+                    PacketError::MalformedVariableByteInteger,
+                ));
             }
 
             multiplier *= 128;
@@ -168,8 +159,8 @@ impl ToBytes for String {
     }
 }
 
-impl ReadBuf for String {
-    fn read(&mut self, buff: &mut impl Iterator<Item = u8>) -> Result<(), PacketError> {
+impl Reader for String {
+    fn read(&mut self, buff: &mut impl crate::BufRead) -> Result<(), crate::MqttError> {
         let mut len = TwoByteInt::default();
         len.read(buff)?;
         let len = len.to_usize();
@@ -177,10 +168,11 @@ impl ReadBuf for String {
         let mut data = alloc::vec![0; len];
 
         for i in data.iter_mut() {
-            *i = buff.next().ok_or(PacketError::BufferTooShort)?;
+            *i = buff.next()?;
         }
 
-        *self = String::from_utf8(data).map_err(|_| PacketError::InvalidUtf8)?;
+        *self = String::from_utf8(data)
+            .map_err(|_| crate::MqttError::Packet(PacketError::InvalidUtf8))?;
 
         Ok(())
     }
@@ -203,8 +195,8 @@ impl ToBytes for StringPair {
     }
 }
 
-impl ReadBuf for StringPair {
-    fn read(&mut self, buff: &mut impl Iterator<Item = u8>) -> Result<(), PacketError> {
+impl Reader for StringPair {
+    fn read(&mut self, buff: &mut impl crate::BufRead) -> Result<(), crate::MqttError> {
         self.key.read(buff)?;
         self.value.read(buff)?;
 
