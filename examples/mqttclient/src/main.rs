@@ -5,9 +5,13 @@
 #[cfg(feature = "axstd")]
 extern crate axstd as std;
 
+#[cfg(feature = "axstd")]
+extern crate alloc;
+
 use core::time::Duration;
 use std::io::{self, prelude::*};
 use std::net::{TcpStream, ToSocketAddrs};
+use alloc::string::String;
 
 use mqtt_lite::*;
 
@@ -52,11 +56,23 @@ fn client() -> io::Result<()> {
 
     let res = Packet::read_from(&mut streamiter).expect("read connack fail");
 
-    if let Packet::ConnAck(ack) = res {
-        println!("connack: {:?}", ack);
-    } else {
-        panic!("invalid connack");
-    }
+    let ack = match res {
+        Packet::ConnAck(ack) => ack,
+        _ => panic!("invalid connack"),
+    };
+
+    println!("connack: {:?}", ack);
+
+    let req = Packet::Publish {
+        dup: false,
+        qos: 0,
+        retain: false,
+        data: Publish::new("test1", Payload::Text(String::from("测试")), None),
+    };
+
+    let bytes = req.to_bytes();
+
+    stream.write_all(&bytes).unwrap();
 
     Ok(())
 }

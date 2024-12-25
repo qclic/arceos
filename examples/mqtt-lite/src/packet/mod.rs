@@ -9,11 +9,12 @@ pub mod connect;
 mod data;
 pub mod header;
 pub mod property;
+pub mod publish;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PacketError {
     BufferTooShort,
-    Read,
+    Read(&'static str),
     InvaildControlType(u8),
     InvalidUtf8,
     MalformedVariableByteInteger,
@@ -22,6 +23,12 @@ pub enum PacketError {
 pub enum Packet {
     Connect(connect::Connect),
     ConnAck(connack::ConnAck),
+    Publish {
+        dup: bool,
+        qos: u8,
+        retain: bool,
+        data: publish::Publish,
+    },
 }
 
 impl ToBytes for Packet {
@@ -36,6 +43,19 @@ impl ToBytes for Packet {
             Packet::ConnAck(conn_ack) => {
                 buf = conn_ack.to_bytes();
                 ty = ControlPakcetType::ConnAck;
+            }
+            Packet::Publish {
+                dup,
+                qos,
+                retain,
+                data,
+            } => {
+                buf = data.to_bytes();
+                ty = ControlPakcetType::Publish {
+                    dup: *dup,
+                    qos: *qos,
+                    retain: *retain,
+                };
             }
         };
 
@@ -69,6 +89,16 @@ impl Packet {
                 let mut conn_ack = connack::ConnAck::default();
                 conn_ack.read(&mut buff)?;
                 Ok(Packet::ConnAck(conn_ack))
+            }
+            ControlPakcetType::Publish { dup, qos, retain } => {
+                let mut data = publish::Publish::default();
+                data.read(&mut buff)?;
+                Ok(Packet::Publish {
+                    dup,
+                    qos,
+                    retain,
+                    data,
+                })
             }
         }
     }

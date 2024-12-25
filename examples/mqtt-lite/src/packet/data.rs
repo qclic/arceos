@@ -4,7 +4,7 @@ use super::{PacketError, Reader, ToBytes};
 
 #[derive(Default)]
 #[repr(transparent)]
-pub struct Bits(u8);
+pub struct Bits(pub u8);
 
 impl Bits {
     pub fn raw(&self) -> u8 {
@@ -27,7 +27,7 @@ impl Reader for Bits {
 
 #[derive(Default)]
 #[repr(transparent)]
-pub struct TwoByteInt(u16);
+pub struct TwoByteInt(pub u16);
 
 impl TwoByteInt {
     pub fn to_usize(&self) -> usize {
@@ -178,6 +178,32 @@ impl Reader for String {
     }
 }
 
+impl ToBytes for Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
+        let data = self.to_vec();
+        let len = data.len() as u16;
+
+        let mut bytes = Vec::with_capacity(data.len() + 2);
+        bytes.extend(len.to_be_bytes());
+        bytes.extend(data);
+        bytes
+    }
+}
+
+impl Reader for Vec<u8> {
+    fn read(&mut self, buff: &mut impl crate::BufRead) -> Result<(), crate::MqttError> {
+        let mut len = TwoByteInt::default();
+        len.read(buff)?;
+        self.resize_with(len.to_usize(), || 0);
+
+        for i in self.iter_mut() {
+            *i = buff.next()?;
+        }
+
+        Ok(())
+    }
+}
+
 pub struct StringPair {
     pub key: String,
     pub value: String,
@@ -202,10 +228,6 @@ impl Reader for StringPair {
 
         Ok(())
     }
-}
-
-pub struct Praser {
-    pub struct_list: Vec<Box<dyn ToBytes>>,
 }
 
 #[cfg(test)]

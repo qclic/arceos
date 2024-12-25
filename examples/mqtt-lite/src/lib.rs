@@ -6,7 +6,7 @@ mod packet;
 
 use core::slice::Iter;
 
-pub use packet::{connack::ConnAck, connect::Connect, Packet};
+pub use packet::{connack::ConnAck, connect::Connect, Packet, publish::Publish, publish::Payload};
 
 pub use packet::{Reader, ToBytes};
 
@@ -15,6 +15,27 @@ pub enum MqttError {
     Disconnected,
     Packet(packet::PacketError),
     EOF,
+    Unspecified,
+    MalformedPacket,
+    Protocol,
+    ImplementationSpecific,
+    UnsupportedProtocolVersion,
+    ClientIdentifierNotValid,
+    BadUsernameOrPassword,
+    NotAuthorized,
+    ServerUnavailable,
+    ServerBusy,
+    Banned,
+    BadAuthenticationMethod,
+    TopicNameInvalid,
+    PacketTooLarge,
+    QuotaExceeded,
+    PayloadFormatInvalid,
+    RetainNotSupported,
+    QosNotSupported,
+    UseAnotherServer,
+    ServerMoved,
+    ConnectionRateExceeded,
 }
 
 pub trait BufRead {

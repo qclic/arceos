@@ -31,13 +31,14 @@ impl Default for FixHeader {
 pub enum ControlPakcetType {
     Connect,
     ConnAck,
+    Publish { dup: bool, qos: u8, retain: bool },
 }
 
 impl ControlPakcetType {
     fn to_byte(self) -> u8 {
         let mut byte = 0;
 
-        let mut ty = 0;
+        let ty;
         let mut flags = 0;
 
         match self {
@@ -46,6 +47,16 @@ impl ControlPakcetType {
             }
             ControlPakcetType::ConnAck => {
                 ty = 2;
+            }
+            ControlPakcetType::Publish { dup, qos, retain } => {
+                ty = 3;
+                if dup {
+                    flags |= 1 << 3;
+                }
+                flags |= qos << 1;
+                if retain {
+                    flags |= 1;
+                }
             }
         }
 
@@ -58,6 +69,13 @@ impl ControlPakcetType {
         Ok(match byte >> 4 {
             1 => ControlPakcetType::Connect,
             2 => ControlPakcetType::ConnAck,
+            3 => {
+                let dup = (byte >> 3) & 1 == 1;
+                let qos = (byte >> 1) & 3;
+                let retain = byte & 1 == 1;
+
+                ControlPakcetType::Publish { dup, qos, retain }
+            }
             _ => return Err(MqttError::Packet(PacketError::InvaildControlType(byte))),
         })
     }
