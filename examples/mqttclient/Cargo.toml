@@ -13,7 +13,7 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-axstd = { workspace = true, features = ["net"], optional = true }
+axstd = { workspace = true, features = ["net", "alloc", "multitask"], optional = true }
 mqtt-lite = { path = "../mqtt-lite", default-features = false }
 
 [features]
