@@ -76,7 +76,7 @@ fn client() -> io::Result<()> {
     // spawn(|| loop {
     //     sleep(Duration::from_secs(5));
 
-    //     // println!("tick");
+    //     println!("tick");
     // });
 
     loop {
