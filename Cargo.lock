@@ -296,6 +296,7 @@ dependencies = [
  "axdriver_virtio",
  "axhal",
  "cfg-if",
+ "igb_driver",
  "log",
 ]
 
@@ -995,6 +996,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "igb_driver"
+version = "0.1.0"
+dependencies = [
+ "axdriver_base",
+ "bit_field",
+ "core_detect",
+ "log",
+ "smoltcp",
+ "spin",
+ "volatile 0.3.0",
 ]
 
 [[package]]

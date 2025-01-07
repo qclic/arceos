@@ -7,4 +7,9 @@ pub use {crate::structs::AxBlockDevice, axdriver_block::BlockDriverOps};
 #[cfg(feature = "display")]
 pub use {crate::structs::AxDisplayDevice, axdriver_display::DisplayDriverOps};
 #[cfg(feature = "net")]
-pub use {crate::structs::AxNetDevice, axdriver_net::NetDriverOps};
+#[cfg(not(feature = "igb"))]
+pub use {crate::structs::AxNetDevice, axdriver_net::{NetDriverOps, NetBufPtr}};
+
+// #[cfg(feature = "net")]
+#[cfg(feature = "igb")]
+pub use {crate::structs::AxNetDevice, igb_driver::net_igb:: {NetDriverOps, NetBufPtr}};
