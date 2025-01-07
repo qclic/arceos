@@ -693,6 +693,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
+name = "bytes"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "325918d6fe32f23b19878fe4b34794ae41fc19ddbe53b10571a4874d44ffd39b"
+
+[[package]]
 name = "cap_access"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1170,6 +1176,22 @@ name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
+
+[[package]]
+name = "mqtt-lite"
+version = "0.1.0"
+dependencies = [
+ "bitflags 2.6.0",
+ "bytes",
+]
+
+[[package]]
+name = "mqttclient"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+ "mqtt-lite",
+]
 
 [[package]]
 name = "nom"
