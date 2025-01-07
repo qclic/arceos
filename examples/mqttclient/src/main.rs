@@ -56,6 +56,8 @@ fn client() -> io::Result<()> {
 
     stream.write_all(&connect_bytes).unwrap();
 
+    println!("connect send ok");
+
     let mut socket = Socket(stream);
 
     let res = Packet::read_from(&mut socket).expect("read connack fail");
@@ -72,12 +74,6 @@ fn client() -> io::Result<()> {
 
     let mut buf = [0; MAX_CMD_LEN];
     let mut cursor = 0;
-
-    // spawn(|| loop {
-    //     sleep(Duration::from_secs(5));
-
-    //     println!("tick");
-    // });
 
     loop {
         if stdin.read(&mut buf[cursor..cursor + 1]).ok() != Some(1) {
@@ -122,6 +118,6 @@ fn client() -> io::Result<()> {
 
 #[cfg_attr(feature = "axstd", no_mangle)]
 fn main() {
-    println!("Hello, simple http client!");
+    println!("Hello, simple mqtt client!");
     client().expect("test http client failed");
 }
