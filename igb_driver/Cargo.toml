@@ -1,0 +1,25 @@
+[package]
+name = "igb_driver"
+version = "0.1.0"
+edition = "2021"
+authors = ["Song Zhiyong <szy@outlook.com>"]
+
+[dependencies]
+log = "0.4"
+bit_field = "0.10.2"
+volatile = "0.3"
+core_detect = "1.0.0"
+spin = "0.9"
+axdriver_base = { git = "https://github.com/arceos-org/axdriver_crates.git", tag = "v0.1.0" }
+
+[dependencies.smoltcp]
+git = "https://github.com/rcore-os/smoltcp.git"
+default-features = false
+rev = "2ade274"
+features = ["alloc", "log","medium-ethernet","proto-ipv4","socket-raw", "socket-icmp", "socket-udp", "socket-tcp", "socket-dns"]
+
+
+
+[features]
+default = []
+irq = []
