@@ -67,7 +67,11 @@ fn client() -> io::Result<()> {
         _ => panic!("invalid connack"),
     };
 
-    println!("connack: {:?}", ack);
+    if let Some(err) = ack.err {
+        panic!("connack error: {:?}", err);
+    }
+
+    println!("wait for input:");
 
     let mut stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
@@ -86,16 +90,19 @@ fn client() -> io::Result<()> {
             CR | LF => {
                 println!();
                 if cursor > 0 {
+                    let msg = buf[..cursor].to_vec();
+
                     let req = Packet::Publish {
                         dup: false,
                         qos: 0,
                         retain: false,
-                        data: Publish::new("test1", Payload::Binary(buf[..cursor].to_vec()), None),
+                        data: Publish::new("test1", Payload::Binary(msg), None),
                     };
 
                     let bytes = req.to_bytes();
 
                     socket.0.write_all(&bytes).unwrap();
+                    socket.0.flush().unwrap();
                     cursor = 0;
                 }
             }
