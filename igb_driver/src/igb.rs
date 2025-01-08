@@ -370,6 +370,11 @@ impl<H: IgbHal, const QS: usize> NicDevice<H> for IgbDevice<H, QS> {
 
     /// Whether can receiver packet.
     fn can_receive(&self, queue_id: u16) -> IgbResult<bool> {
+        let stat = self.get_reg32(IGB_STATUS);
+        if stat & IGB_STATUS_LU == 0 {
+            return Ok(false);
+        }
+
         let queue = self
             .rx_queues
             .get(queue_id as usize)
@@ -379,6 +384,11 @@ impl<H: IgbHal, const QS: usize> NicDevice<H> for IgbDevice<H, QS> {
 
     /// Whether can send packet.
     fn can_send(&self, queue_id: u16) -> IgbResult<bool> {
+        let stat = self.get_reg32(IGB_STATUS);
+        if stat & IGB_STATUS_LU == 0 {
+            return Ok(false);
+        }
+        
         let queue = self
             .tx_queues
             .get(queue_id as usize)
@@ -547,9 +557,17 @@ impl<H: IgbHal, const QS: usize> IgbDevice<H, QS> {
         );
 
         self.set_flags32(IGB_CTRL, IGB_CTRL_SLU);
-        self.set_phy_flags32(IGB_PHY_CTRL, IGB_PHY_AUTONE | IGB_PHY_RESTART | self.get_phy_flags32(0) as u32);
+        self.set_phy_flags32(
+            IGB_PHY_CTRL,
+            IGB_PHY_AUTONE | IGB_PHY_RESTART | self.get_phy_flags32(0) as u32,
+        );
         let _ = H::wait_until(Duration::from_millis(1000));
-        debug!("phy status:{:x}, ctl:{:x}, {:x}", self.get_phy_flags32(1), self.get_phy_flags32(0), self.get_phy_flags32(4));        
+        debug!(
+            "phy status:{:x}, ctl:{:x}, {:x}",
+            self.get_phy_flags32(1),
+            self.get_phy_flags32(0),
+            self.get_phy_flags32(4)
+        );
 
         // reset-on-read registers, just read them once
         self.reset_stats();
@@ -567,10 +585,14 @@ impl<H: IgbHal, const QS: usize> IgbDevice<H, QS> {
         }
         // enable promisc mode by default to make testing easier
         // self.set_promisc(true);
-        debug!("CTRL:{:x}, STATUS:{:x}", self.get_reg32(IGB_CTRL), self.get_reg32(IGB_STATUS));
+        debug!(
+            "CTRL:{:x}, STATUS:{:x}",
+            self.get_reg32(IGB_CTRL),
+            self.get_reg32(IGB_STATUS)
+        );
         // wait some time for the link to come up
         self.set_flags32(IGB_CTRL, 1 << 28);
-        
+
         info!("Success to initialize and reset Intel IGB NIC regs.");
 
         Ok(())
@@ -653,7 +675,6 @@ impl<H: IgbHal, const QS: usize> IgbDevice<H, QS> {
     /// Initializes the tx queues of this device.
     #[allow(clippy::needless_range_loop)]
     fn init_tx(&mut self) -> IgbResult {
-
         //default buffer size allocations
         self.set_reg32(IGB_TXPBSIZE, IGB_TXPBSIZE_40KB);
 
@@ -701,7 +722,7 @@ impl<H: IgbHal, const QS: usize> IgbDevice<H, QS> {
             self.tx_queues.push(tx_queue);
         }
 
-        // final step: enable 
+        // final step: enable
         // self.set_flags32(IGB_TCTL, IGB_TCTL_EN);
 
         Ok(())
@@ -778,7 +799,7 @@ impl<H: IgbHal, const QS: usize> IgbDevice<H, QS> {
         self.wait_set_reg32(IGB_TXDCTL(u32::from(queue_id)), IGB_TXDCTL_EN);
 
         self.set_flags32(IGB_TCTL, IGB_TCTL_EN);
-        
+
         Ok(())
     }
 
@@ -893,7 +914,7 @@ impl<H: IgbHal, const QS: usize> IgbDevice<H, QS> {
     }
 
     fn get_phy_flags32(&self, offset: u32) -> u16 {
-        let mut mdic:u32;
+        let mut mdic: u32;
         self.set_reg32(IGB_MDIC, offset << 16 | 1 << 21 | 1 << 27);
         loop {
             mdic = self.get_reg32(IGB_MDIC);
